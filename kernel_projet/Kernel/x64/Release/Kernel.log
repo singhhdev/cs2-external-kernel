@@ -1,0 +1,8 @@
+﻿  entry.cpp
+C:\Users\ka\Desktop\Guarded-Regions-Bypass-Valorant-master\Kernel\functions.h(8,48): warning C4312: 'type cast': conversion from 'uint32_t' to 'HANDLE' of greater size
+C:\Users\ka\Desktop\Guarded-Regions-Bypass-Valorant-master\Kernel\functions.h(6,33): warning C4305: 'return': truncation from 'NTSTATUS' to 'bool'
+C:\Users\ka\Desktop\Guarded-Regions-Bypass-Valorant-master\Kernel\functions.h(25,47): warning C4312: 'type cast': conversion from 'uint32_t' to 'HANDLE' of greater size
+C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets(1389,5): warning MSB8012: TargetPath(C:\Users\ka\Desktop\Guarded-Regions-Bypass-Valorant-master\x64\Release\.sys) does not match the Linker's OutputFile property value (C:\Users\ka\Desktop\Guarded-Regions-Bypass-Valorant-master\x64\Release\Kernel.sys). This may cause your project to build incorrectly. To correct this, please make sure that $(OutDir), $(TargetName) and $(TargetExt) property values match the value specified in %(Link.OutputFile).
+  Generating code
+  Finished generating code
+  Kernel.vcxproj -> C:\Users\ka\Desktop\Guarded-Regions-Bypass-Valorant-master\x64\Release\.sys
