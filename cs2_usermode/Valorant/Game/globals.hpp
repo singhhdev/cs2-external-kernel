@@ -6,6 +6,7 @@ int processid = 0;
 RECT Rect;
 
 ULONG64 client = 0;
+uintptr_t global_pawn = 0;
 
 
 namespace Settings
