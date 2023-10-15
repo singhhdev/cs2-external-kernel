@@ -1,47 +1,49 @@
 #pragma once
 #include <iostream>
-#include "C:\Users\ka\Desktop\cs2_usermode\Valorant\Overlay\render.hpp"
+#include "C:\Users\ka\Desktop\cheat source\cs2_usermode\Valorant\Overlay\render.hpp"
 
 bool cached = false;
 
 auto ESPColor = ImColor(255, 255, 255);
 namespace offsets
 {
-	std::ptrdiff_t dwEntityList = 0x17888D8;
-	std::ptrdiff_t dwViewMatrix = 0x1876730;
-	std::ptrdiff_t dwLocalPlayer = 0x17D7158; //dwLocalPlayerController offsets.rs`
+	std::ptrdiff_t dwEntityList = 0x178FC88;
+	std::ptrdiff_t dwViewMatrix = 0x187DAB0;
+	std::ptrdiff_t dwLocalPlayerController = 0x17DE508;
+	std::ptrdiff_t dwLocalPlayerPawn = 0x187CFC8;
 
 	std::ptrdiff_t dwPawnHealth = 0x808;
-	std::ptrdiff_t dwPlayerPawn = 0x7FC; //m_hPlayerPawn client.dll.rs
+	std::ptrdiff_t dwPlayerPawn = 0x7BC; //m_hPlayerPawn client.dll.rs
 	std::ptrdiff_t dwSanitizedName = 0x720;
 	std::ptrdiff_t m_bDormant = 0xE7;
 	std::ptrdiff_t m_iTeamNum = 0x3bf;
 	std::ptrdiff_t m_vecOrigin = 0x1214; //m_vOldOrigin client.dll.rs
 	std::ptrdiff_t m_iHealth = 0x32C; //m_iHealth client.dll.rs
-
-
 }
 
 void espLoop()
 {
-	uintptr_t localPlayer = driver.readv<uintptr_t>(client + offsets::dwLocalPlayer);
-	if (!localPlayer) return;
-	int localTeam = driver.readv<int>(localPlayer + offsets::m_iTeamNum);
+	uintptr_t dwLocalPlayerPawn = driver.readv<uintptr_t>(client + offsets::dwLocalPlayerPawn); // normal players
+
+	if (!dwLocalPlayerPawn) return;
+
+	int localTeam = driver.readv<int>(dwLocalPlayerPawn + offsets::m_iTeamNum);
 
 	view_matrix_t view_matrix = driver.readv<view_matrix_t>(client + offsets::dwViewMatrix);
 
-	Vector3 localOrigin = driver.readv<Vector3>(localPlayer + offsets::m_vecOrigin);
+	Vector3 localOrigin = driver.readv<Vector3>(dwLocalPlayerPawn + offsets::m_vecOrigin);
 
 	uintptr_t entity_list = driver.readv<uintptr_t>(client + offsets::dwEntityList);
 
-	for (int i = 1; i < 32; i++) {
+	for (int i = 1; i < 32; i++) 
+	{
 		uintptr_t list_entry = driver.readv<uintptr_t>(entity_list + (8 * (i & 0x7FFF) >> 9) + 16);
 		if (!list_entry) continue;
 		uintptr_t player = driver.readv<uintptr_t>(list_entry + 120 * (i & 0x1FF));
 
 		if (!player) continue;
 
-		int playerHealth = driver.readv<int>(player + offsets::dwPawnHealth);
+		int playerHealth = driver.readv<int>(dwLocalPlayerPawn + offsets::m_iHealth);
 		if (playerHealth <= 0 || playerHealth > 100) continue;
 
 		std::uint32_t playerpawn = driver.readv<std::uint32_t>(player + offsets::dwPlayerPawn);
@@ -49,8 +51,10 @@ void espLoop()
 		uintptr_t list_entry2 = driver.readv<uintptr_t>(entity_list + 0x8 * ((playerpawn & 0x7FFF) >> 9) + 16);
 		if (!list_entry2) continue;
 		uintptr_t pCSPlayerPawn = driver.readv<uintptr_t>(list_entry2 + 120 * (playerpawn & 0x1FF));
+		int csPlayerHealth = driver.readv<int>(pCSPlayerPawn + offsets::m_iHealth);
+		if (csPlayerHealth <= 0 || csPlayerHealth > 100) continue;
 
-		if (pCSPlayerPawn == localPlayer) continue;
+		if (pCSPlayerPawn == dwLocalPlayerPawn) continue;
 
 		int playerTeam = driver.readv<int>(player + offsets::m_iTeamNum);
 
@@ -83,7 +87,7 @@ void espLoop()
 			}
 			if (Settings::Visuals::bHealth) {
 				char dist[64];
-				sprintf_s(dist, "%d", playerHealth);
+				sprintf_s(dist, "%d", csPlayerHealth);
 
 				ImVec2 TextSize = ImGui::CalcTextSize(dist);
 				ImGui::GetForegroundDrawList()->AddText(ImVec2(screenpos.x - TextSize.x / 2, screenpos.y - TextSize.y / 2), ImGui::GetColorU32({ 255, 255, 255, 255 }), dist);
