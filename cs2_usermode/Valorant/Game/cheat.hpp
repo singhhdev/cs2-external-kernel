@@ -19,6 +19,7 @@ namespace offsets
 	std::ptrdiff_t m_iTeamNum = 0x3bf;
 	std::ptrdiff_t m_vecOrigin = 0x1214; //m_vOldOrigin client.dll.rs
 	std::ptrdiff_t m_iHealth = 0x32C; //m_iHealth client.dll.rs
+	std::ptrdiff_t forceJump = 0x1697300; //m_iHealth client.dll.rs
 }
 
 void espLoop()
@@ -26,6 +27,19 @@ void espLoop()
 	uintptr_t dwLocalPlayerPawn = driver.readv<uintptr_t>(client + offsets::dwLocalPlayerPawn); // normal players
 
 	if (!dwLocalPlayerPawn) return;
+
+	if (Settings::misc::bhop) 
+	{
+		const auto on_ground = (driver.readv<uint8_t>(dwLocalPlayerPawn + 0x3C8) & 1) != 0;
+		if (GetAsyncKeyState(VK_SPACE) < 0 && on_ground)
+		{
+			driver.write<DWORD>(client + offsets::forceJump, 65537);
+		}
+		else
+		{
+		driver.write<DWORD>(client + offsets::forceJump, 256);
+		}
+	}
 
 	int localTeam = driver.readv<int>(dwLocalPlayerPawn + offsets::m_iTeamNum);
 
