@@ -37,57 +37,6 @@ static ULONG Height = GetSystemMetrics(SM_CYSCREEN);
 WPARAM main_loop();
 void render();
 
-void DefaultTheme() {
-	//thanks https://www.unknowncheats.me/forum/members/4566270.html	
-
-	ImGuiStyle& s = ImGui::GetStyle();
-
-	const ImColor accentCol = ImColor(255, 0, 0, 255);
-	const ImColor bgSecondary = ImColor(255, 0, 0, 255);
-	s.Colors[ImGuiCol_WindowBg] = ImColor(32, 32, 32, 255);
-	s.Colors[ImGuiCol_ChildBg] = bgSecondary;
-	s.Colors[ImGuiCol_FrameBg] = ImColor(65, 64, 64, 255);
-	s.Colors[ImGuiCol_FrameBgActive] = ImColor(35, 37, 39, 255);
-	s.Colors[ImGuiCol_Border] = ImColor(1, 1, 1, 255);
-	s.Colors[ImGuiCol_CheckMark] = ImColor(255, 0, 0, 255);
-	s.Colors[ImGuiCol_SliderGrab] = ImColor(255, 0, 0, 255);
-	s.Colors[ImGuiCol_SliderGrab] = ImColor(255, 0, 0, 255);
-	s.Colors[ImGuiCol_SliderGrabActive] = ImColor(255, 0, 0, 255);
-	s.Colors[ImGuiCol_ResizeGrip] = ImColor(24, 24, 24, 255);
-	s.Colors[ImGuiCol_Header] = ImColor(0, 0, 0, 255);
-	s.Colors[ImGuiCol_HeaderHovered] = ImColor(0, 0, 0, 255);
-	s.Colors[ImGuiCol_HeaderActive] = ImColor(0, 0, 0, 255);
-	s.Colors[ImGuiCol_TitleBg] = ImColor(0, 0, 0, 255);
-	s.Colors[ImGuiCol_TitleBgCollapsed] = ImColor(0, 0, 0, 255);
-	s.Colors[ImGuiCol_TitleBgActive] = ImColor(0, 0, 0, 255);
-	s.Colors[ImGuiCol_FrameBgHovered] = ImColor(65, 64, 64, 255);
-	s.Colors[ImGuiCol_ScrollbarBg] = ImColor(0, 0, 0, 255);
-	s.Colors[ImGuiCol_ScrollbarGrab] = ImVec4(0.80f, 0.80f, 0.83f, 0.31f);
-	s.Colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4(0.56f, 0.56f, 0.58f, 1.00f);
-	s.Colors[ImGuiCol_ScrollbarGrabActive] = ImVec4(0.06f, 0.05f, 0.07f, 1.00f);
-	s.Colors[ImGuiCol_Header] = ImColor(42, 42, 42, 255);
-	s.Colors[ImGuiCol_HeaderHovered] = ImColor(50, 50, 50, 255);
-	s.Colors[ImGuiCol_HeaderActive] = ImColor(50, 50, 50, 255);
-	s.Colors[ImGuiCol_PopupBg] = ImColor(15, 15, 15, 255);
-	s.Colors[ImGuiCol_Button] = ImColor(30, 30, 30, 255);
-	s.Colors[ImGuiCol_ButtonHovered] = ImColor(30, 30, 30, 255);
-	s.Colors[ImGuiCol_ButtonActive] = ImColor(30, 30, 30, 255);
-	s.Colors[ImGuiCol_Text] = ImColor(255, 255, 255, 255);
-
-	s.AntiAliasedFill = true;
-	s.AntiAliasedLines = true;
-
-	s.ChildRounding = 0.0f;
-	s.FrameBorderSize = 1.0f;
-	s.FrameRounding = 0.0f;
-	s.PopupRounding = 0.0f;
-	s.ScrollbarRounding = 0.0f;
-	s.ScrollbarSize = 0.0f;
-	s.TabRounding = 0.0f;
-	s.WindowRounding = 0.0f;
-
-}
-
 auto init_wndparams(HWND hWnd) -> HRESULT
 {
 	if (FAILED(Direct3DCreate9Ex(D3D_SDK_VERSION, &p_Object)))
@@ -116,8 +65,6 @@ auto init_wndparams(HWND hWnd) -> HRESULT
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	ImGuiStyle& s = ImGui::GetStyle();
 	io.IniFilename = NULL;
-
-	DefaultTheme();
 
 	ImGui_ImplWin32_Init(hWnd);
 	ImGui_ImplDX9_Init(p_Device);
@@ -225,36 +172,21 @@ void DrawFilledRect2(int x, int y, int w, int h, ImColor color)
 	ImGui::GetForegroundDrawList()->AddRectFilled(ImVec2(x, y), ImVec2(x + w, y + h), color, 0, 0);
 }
 
-void DrawCornerBox(float x, float y, float w, float h, const ImColor& color)
+
+void DrawNormalBox(int x, int y, int w, int h, int borderPx, RGBA* color)
 {
-	ImGui::GetForegroundDrawList()->AddLine(ImVec2(x, y), ImVec2(x + w / 4.f, y), color);
-	ImGui::GetForegroundDrawList()->AddLine(ImVec2(x, y), ImVec2(x, y + h / 4.f), color);
-
-	ImGui::GetForegroundDrawList()->AddLine(ImVec2(x + w, y), ImVec2(x + w - w / 4.f, y), color);
-	ImGui::GetForegroundDrawList()->AddLine(ImVec2(x + w, y), ImVec2(x + w, y + h / 4.f), color);
-
-	ImGui::GetForegroundDrawList()->AddLine(ImVec2(x, y + h), ImVec2(x + w / 4.f, y + h), color);
-	ImGui::GetForegroundDrawList()->AddLine(ImVec2(x, y + h), ImVec2(x, y + h - h / 4.f), color);
-
-	ImGui::GetForegroundDrawList()->AddLine(ImVec2(x + w, y + h), ImVec2(x + w, y + h - h / 4.f), color);
-	ImGui::GetForegroundDrawList()->AddLine(ImVec2(x + w, y + h), ImVec2(x + w - w / 4.f, y + h), color);
+	DrawFilledRect(x + borderPx, y, w, borderPx, color); //top 
+	DrawFilledRect(x + w - w + borderPx, y, w, borderPx, color); //top 
+	DrawFilledRect(x, y, borderPx, h, color); //left 
+	DrawFilledRect(x, y + h - h + borderPx * 2, borderPx, h, color); //left 
+	DrawFilledRect(x + borderPx, y + h + borderPx, w, borderPx, color); //bottom 
+	DrawFilledRect(x + w - w + borderPx, y + h + borderPx, w, borderPx, color); //bottom 
+	DrawFilledRect(x + w + borderPx, y, borderPx, h, color);//right 
+	DrawFilledRect(x + w + borderPx, y + h - h + borderPx * 2, borderPx, h, color);//right 
 }
-
-void DrawNormalBox(int x, int y, int w, int h, int borderPx, ImColor color)
-{
-	DrawFilledRect2(x + borderPx, y, w, borderPx, color);
-	DrawFilledRect2(x + w - w + borderPx, y, w, borderPx, color);
-	DrawFilledRect2(x, y, borderPx, h, color);
-	DrawFilledRect2(x, y + h - h + borderPx * 2, borderPx, h, color);
-	DrawFilledRect2(x + borderPx, y + h + borderPx, w, borderPx, color);
-	DrawFilledRect2(x + w - w + borderPx, y + h + borderPx, w, borderPx, color);
-	DrawFilledRect2(x + w + borderPx, y, borderPx, h, color);
-	DrawFilledRect2(x + w + borderPx, y + h - h + borderPx * 2, borderPx, h, color);
-}
-
 using namespace UE4Structs;
 
-auto Draw2DBox(Vector3 RootPosition, float Width, float Height, ImColor Color) -> void
+auto Draw2DBox(Vector3 RootPosition, float Width, float Height, RGBA* Color) -> void
 {
 	DrawNormalBox(RootPosition.x - Width / 2, RootPosition.y - Height / 2, Width, Height, Settings::Visuals::BoxWidth, Color);
 }
@@ -264,12 +196,6 @@ void DrawRect(int x, int y, int w, int h, RGBA* color, int thickness)
 	ImGui::GetForegroundDrawList()->AddRect(ImVec2(x, y), ImVec2(x + w, y + h), ImGui::ColorConvertFloat4ToU32(ImVec4(color->R / 255.0, color->G / 255.0, color->B / 255.0, color->A / 255.0)), 0, 0, thickness);
 }
 
-auto DrawOutlinedBox(Vector3 RootPosition, float Width, float Height, ImColor Color) -> void
-{
-	DrawCornerBox(RootPosition.x - Width / 2, RootPosition.y - Height / 2, Width, Height, Color);
-	DrawCornerBox(RootPosition.x - Width / 2 - 1, RootPosition.y - Height / 2 - 1, Width, Height, ImColor(0, 0, 0));
-	DrawCornerBox(RootPosition.x - Width / 2 + 1, RootPosition.y - Height / 2 + 1, Width, Height, ImColor(0, 0, 0));
-}
 
 auto DrawDistance(Vector3 Location, float Distance) -> void
 {
@@ -301,4 +227,44 @@ auto DrawHealthBar(Vector3 RootPosition, float Width, float Height, float Health
 
 	DrawFilledRect(HPBox_X, HPBox_Y, HPBoxWidth, HPBoxHeight, &ColorStructs::Col.green);
 	DrawRect(HPBox_X - 1, HPBox_Y - 1, HPBoxWidth + 2, HPBoxHeight + 2, &ColorStructs::Col.black, 1);
+}
+
+void DrawRightProgressBar(int x, int y, int w, int h, int thick, int m_health)
+{
+	int G = (255 * m_health / 100);
+	int R = 255 - G;
+	RGBA healthcol = { R, G, 0, 255 };
+
+	DrawFilledRect(x + (w / 2) - 25, y, thick, (h)*m_health / 100, &healthcol);
+}
+void DrawArmor(int x, int y, int w, int h, int thick, int armor)
+{
+	
+	DrawFilledRect(x + (w / 2) - 25, y, thick, (h)*armor / 100, &Col.lightblue);
+}
+void DrawCrossNazi(int buyukluk, DWORD color)
+{
+	float screen_width = GetSystemMetrics(SM_CXSCREEN);
+	float screen_height = GetSystemMetrics(SM_CYSCREEN);
+	//ImVec2 window_pos = ImGui::GetWindowPos();
+	ImVec2 window_size = ImGui::GetWindowSize();
+	int crosspozisyon = screen_width / 2;
+	int crosspozisyony = screen_height / 2;
+	ImGui::GetForegroundDrawList()->AddLine(ImVec2(crosspozisyon, crosspozisyony - buyukluk), ImVec2(crosspozisyon, crosspozisyony + buyukluk), ImColor(color));
+	ImGui::GetForegroundDrawList()->AddLine(ImVec2(crosspozisyon - buyukluk, crosspozisyony), ImVec2(crosspozisyon + buyukluk, crosspozisyony), ImColor(color));
+	ImGui::GetForegroundDrawList()->AddLine(ImVec2(crosspozisyon, crosspozisyony + buyukluk), ImVec2(crosspozisyon - buyukluk, crosspozisyony + buyukluk), ImColor(color));
+	ImGui::GetForegroundDrawList()->AddLine(ImVec2(crosspozisyon, crosspozisyony - buyukluk), ImVec2(crosspozisyon + buyukluk, crosspozisyony - buyukluk), ImColor(color));
+	ImGui::GetForegroundDrawList()->AddLine(ImVec2(crosspozisyon - buyukluk, crosspozisyony), ImVec2(crosspozisyon - buyukluk, crosspozisyony - buyukluk), ImColor(color));
+	ImGui::GetForegroundDrawList()->AddLine(ImVec2(crosspozisyon + buyukluk, crosspozisyony), ImVec2(crosspozisyon + buyukluk, crosspozisyony + buyukluk), ImColor(color));
+}
+void DrawCornerBox(int x, int y, int w, int h, int borderPx, RGBA* color)
+{
+	DrawFilledRect(x + borderPx, y, w / 3, borderPx, color); //top 
+	DrawFilledRect(x + w - w / 3 + borderPx, y, w / 3, borderPx, color); //top 
+	DrawFilledRect(x, y, borderPx, h / 3, color); //left 
+	DrawFilledRect(x, y + h - h / 3 + borderPx * 2, borderPx, h / 3, color); //left 
+	DrawFilledRect(x + borderPx, y + h + borderPx, w / 3, borderPx, color); //bottom 
+	DrawFilledRect(x + w - w / 3 + borderPx, y + h + borderPx, w / 3, borderPx, color); //bottom 
+	DrawFilledRect(x + w + borderPx, y, borderPx, h / 3, color);//right 
+	DrawFilledRect(x + w + borderPx, y + h - h / 3 + borderPx * 2, borderPx, h / 3, color);//right 
 }

@@ -6,12 +6,10 @@
 #include "driver/driver.hpp"
 #include "overlay/render.hpp"
 #include "overlay/menu.hpp"
-
 #include "game/cheat.hpp"
 
 #include <TlHelp32.h>
 #include <string>
-
 
 DWORD GetProcessID(const std::wstring processName)
 {
@@ -59,10 +57,13 @@ int main()
 	driver.initdriver(processid);
 	
 	client = (uintptr_t)driver.client_address();
-	std::cout << "> client: " << std::hex << client << std::endl;
 
 	setup_window();
 	init_wndparams(MyWnd);
+	
+	std::thread(cacheGame).detach();
+	ShowWindow(GetConsoleWindow(), SW_HIDE);
+
 	main_loop();
 
 	exit(0);

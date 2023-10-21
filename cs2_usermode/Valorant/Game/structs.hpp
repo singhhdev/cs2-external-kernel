@@ -5,13 +5,76 @@
 #define M_PI 3.14159265358979323846264338327950288419716939937510
 static ULONG ww = GetSystemMetrics(SM_CXSCREEN);
 static ULONG wh = GetSystemMetrics(SM_CYSCREEN);
+class Vec2
+{
+public:
+	float x, y;
+public:
+	Vec2() :x(0.f), y(0.f) {}
+	Vec2(float x_, float y_) :x(x_), y(y_) {}
+	Vec2(ImVec2 ImVec2_) :x(ImVec2_.x), y(ImVec2_.y) {}
+	Vec2 operator=(ImVec2 ImVec2_)
+	{
+		x = ImVec2_.x;
+		y = ImVec2_.y;
+		return *this;
+	}
+	Vec2 operator+(Vec2 Vec2_)
+	{
+		return { x + Vec2_.x,y + Vec2_.y };
+	}
+	Vec2 operator-(Vec2 Vec2_)
+	{
+		return { x - Vec2_.x,y - Vec2_.y };
+	}
+	Vec2 operator*(Vec2 Vec2_)
+	{
+		return { x * Vec2_.x,y * Vec2_.y };
+	}
+	Vec2 operator/(Vec2 Vec2_)
+	{
+		return { x / Vec2_.x,y / Vec2_.y };
+	}
+	Vec2 operator*(float n)
+	{
+		return { x / n,y / n };
+	}
+	Vec2 operator/(float n)
+	{
+		return { x / n,y / n };
+	}
+	bool operator==(Vec2 Vec2_)
+	{
+		return x == Vec2_.x && y == Vec2_.y;
+	}
+	bool operator!=(Vec2 Vec2_)
+	{
+		return x != Vec2_.x || y != Vec2_.y;
+	}
+	ImVec2 ToImVec2()
+	{
+		return ImVec2(x, y);
+	}
+	float Length()
+	{
+		return sqrtf(powf(x, 2) + powf(y, 2));
+	}
+	float DistanceTo(const Vec2& Pos)
+	{
+		return sqrtf(powf(Pos.x - x, 2) + powf(Pos.y - y, 2));
+	}
+};
+
 namespace UE4Structs
 {
-	typedef struct _ValEntity {
+	typedef struct _CS2Entity
+	{
 		uintptr_t Actor;
-	}ValEntity;
+		int health;
+		int armor;
+	}CS2Entity;
 
-	std::vector<ValEntity> ValList;
+	std::vector<CS2Entity> PlayerList;
 
 	struct view_matrix_t {
 		float* operator[ ](int index) {
@@ -20,7 +83,40 @@ namespace UE4Structs
 
 		float matrix[4][4];
 	};
+	struct Vector2 {
+	public:
+		float x;
+		float y;
 
+		inline Vector2() : x(0), y(0) {}
+		inline Vector2(float x, float y) : x(x), y(y) {}
+
+		inline float Distance(Vector2 v) {
+			return sqrtf(((v.x - x) * (v.x - x) + (v.y - y) * (v.y - y)));
+		}
+
+		inline Vector2 operator+(const Vector2& v) const {
+			return Vector2(x + v.x, y + v.y);
+		}
+
+		inline Vector2 operator-(const Vector2& v) const {
+			return Vector2(x - v.x, y - v.y);
+		}
+		void Normalize()
+		{
+			if (x > 89.0f)
+				x -= 180.f;
+
+			if (x < -89.0f)
+				x += 180.f;
+
+			if (y > 180.f)
+				y -= 360.f;
+
+			if (y < -180.f)
+				y += 360.f;
+		}
+	};
 	struct Vector3
 	{
 		// constructor
@@ -88,6 +184,8 @@ namespace UE4Structs
 		{
 			return x == 0.f && y == 0.f && z == 0.f;
 		}
+
+		
 
 		Vector3 world_to_screen(view_matrix_t matrix) const {
 			float _x = matrix[0][0] * x + matrix[0][1] * y + matrix[0][2] * z + matrix[0][3];

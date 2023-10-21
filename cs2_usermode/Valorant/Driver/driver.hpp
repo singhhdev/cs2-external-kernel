@@ -54,6 +54,21 @@ public:
 		}
 	}
 
+
+
+	void readsize(const uintptr_t address, const void* buffer, const size_t size)
+	{
+		readvm(_processid,address, uintptr_t(buffer), size);
+	}
+
+
+	std::string read_str(std::uintptr_t dst)
+	{
+		char buf[256];
+		readsize(dst, &buf, sizeof(buf));
+		return buf;
+	}
+
 	template <typename T>
 	T readv(uintptr_t src, size_t size = sizeof(T))
 	{

@@ -24,7 +24,7 @@
     <ProjectGuid>{101afe41-beeb-4fb0-816c-0c4e5283a567}</ProjectGuid>
     <RootNamespace>PixelFortnite</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
-    <ProjectName>cs2_esp</ProjectName>
+    <ProjectName>cs_usermode</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
