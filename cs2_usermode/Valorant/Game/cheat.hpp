@@ -1,6 +1,6 @@
 #pragma once
 #include <iostream>
-#include "C:\Users\ka\Desktop\cheat source\cs2_usermode\Valorant\Overlay\render.hpp"
+#include "../../Valorant/Overlay/render.hpp"
 
 using namespace ColorStructs;
 
