@@ -58,18 +58,6 @@ namespace colors
 	float itemscol[3] = { 1.0f , 1.0f , 1.0f };
 }
 
-float Calc2D_Distt(const Vec2& Src, const Vector3& Dst)
-{
-	float dx = Src.x - Dst.x;
-	float dy = Src.y - Dst.y;
-	return sqrt(dx * dx + dy * dy);
-}
-
-float AimFov(Vector3 ScreenPos)
-{
-	return Calc2D_Distt(Vec2(ScreenCenterX, ScreenCenterY), ScreenPos);
-}
-
 struct C_UTL_VECTOR
 {
 	DWORD64 Count = 0;
@@ -260,19 +248,53 @@ void espLoop()
 			uint64_t gamescene = driver.readv<uint64_t>(CachePlayers.Actor + 0x310);
 			uint64_t bonearray = driver.readv<uint64_t>(gamescene + 0x160 + 0x80);
 			
-			Vector3 heady2 = driver.readv<Vector3>(bonearray + 6 * 32);
+			headHitBox = driver.readv<Vector3>(bonearray + 6 * 32);
 
-
-			headHitBox = heady2;
 
 			if (screenpos.z >= 0.01f)
 			{
 				Vector3 head = driver.readv<Vector3>(bonearray + 6 * 32);
 				Vector3 projectHead = head.world_to_screen(view_matrix);
+
 				float height = abs(screenpos.y - screenhead.y);
 				float width = height / 2.0f;
 				
 				if (Settings::Visuals::bBox)
+				{
+					if (Settings::Visuals::boxMode == 0) {
+						!Settings::Visuals::bBox;   //off
+					}
+
+					RGBA ESPColor = { colors::espcol[0] * 255, colors::espcol[1] * 255, colors::espcol[2] * 255, 255 };
+					if (Settings::Visuals::boxMode == 1)   //2d box
+					{
+						DrawNormalBox(screenpos.x - width / 2 + 1, screenhead.y, width, height, 1, &Col.black);
+						DrawNormalBox(screenpos.x - width / 2 - 1, screenhead.y, width, height, 1, &Col.black);
+						DrawNormalBox(screenpos.x - width / 2, screenhead.y + 1, width, height, 1, &Col.black);
+						DrawNormalBox(screenpos.x - width / 2, screenhead.y - 1, width, height, 1, &Col.black);
+						DrawNormalBox(screenpos.x - (width / 2), screenhead.y, width, height, 1, &ESPColor);
+
+					}
+					if (Settings::Visuals::boxMode == 2) {
+						DrawCornerBox(screenpos.x - width / 2 + 1, screenhead.y, width, height, 1, &Col.black);
+						DrawCornerBox(screenpos.x - width / 2 - 1, screenhead.y, width, height, 1, &Col.black);
+						DrawCornerBox(screenpos.x - width / 2, screenhead.y + 1, width, height, 1, &Col.black);
+						DrawCornerBox(screenpos.x - width / 2, screenhead.y - 1, width, height, 1, &Col.black);
+						DrawCornerBox(screenpos.x - (width / 2), screenhead.y, width, height, 1, &ESPColor);
+					}
+					if (Settings::Visuals::boxMode == 3)
+
+					{
+
+						DrawFilledRect(screenpos.x - (width / 2), screenhead.y, width, height, &Col.filled);
+						DrawNormalBox(screenpos.x - width / 2 + 1, screenhead.y, width, height, 1, &Col.black);
+						DrawNormalBox(screenpos.x - width / 2 - 1, screenhead.y, width, height, 1, &Col.black);
+						DrawNormalBox(screenpos.x - width / 2, screenhead.y + 1, width, height, 1, &Col.black);
+						DrawNormalBox(screenpos.x - width / 2, screenhead.y - 1, width, height, 1, &Col.black);
+						DrawNormalBox(screenpos.x - (width / 2), screenhead.y, width, height, 1, &ESPColor);
+
+					}
+				}
 				if (Settings::Visuals::bSnaplines) {
 					ImGui::GetBackgroundDrawList()->AddLine({ screenpos.x, screenpos.y }, ImVec2(Width / 2, Height), ImColor(255, 255, 255));
 
@@ -413,16 +435,6 @@ void espLoop()
 		}
 		if (Settings::aimbot::aimbot && GetAsyncKeyState(hotkeys::aimkey) < 0)
 		{
-			/*if (GetAsyncKeyState(hotkeys::aimkey) && (AimFov(aim) < Settings::aimbot::aim_fov)) {
-				if (Settings::aimbot::selectedhitbox == 0) {
-					mouse_event(MOUSEEVENTF_MOVE, (headHitBox.x - (ScreenCenterX)) / Settings::aimbot::smooth, (headHitBox.y - (ScreenCenterY)) / Settings::aimbot::smooth, 0, 0);
-				}
-
-				if (Settings::aimbot::selectedhitbox == 1) {
-					mouse_event(MOUSEEVENTF_MOVE, (aim.x - (ScreenCenterX)) / Settings::aimbot::smooth, (aim.y - (ScreenCenterY)) / Settings::aimbot::smooth, 0, 0);
-
-				}
-			}*/
 			AimBot(headHitBox);
 
 		}
