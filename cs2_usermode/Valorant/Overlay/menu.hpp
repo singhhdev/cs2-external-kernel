@@ -532,11 +532,12 @@ void drawmenu() {
 					ImGui::BeginChild(("##tab1left"), ImVec2(189, 455), true, ImGuiWindowFlags_NoScrollbar);
 					{
 						ImGui::Checkbox("aimbot", &Settings::aimbot::aimbot);
-						if (Settings::aimbot::aimbot) {
+						if (Settings::aimbot::aimbot) 
+						{
 							ImGui::SliderFloat("fov", &Settings::aimbot::aim_fov, 1, 360);
 							ImGui::Spacing();
 							ImGui::Spacing();
-							ImGui::SliderFloat("smooth", &Settings::aimbot::smooth, 1, 360);
+							ImGui::SliderFloat("smooth", &Settings::aimbot::smooth, 0.1f, 1.f);
 							ImGui::Spacing();
 							ImGui::Text(("key "));
 							ImGui::SameLine();
@@ -544,7 +545,13 @@ void drawmenu() {
 							ImGui::Spacing();
 							ImGui::Spacing();
 							ImGui::Combo(("hitbox"), &Settings::aimbot::selectedhitbox, Settings::aimbot::hitbox, IM_ARRAYSIZE(Settings::aimbot::hitbox));
-
+							ImGui::Spacing();
+							ImGui::Spacing();
+							ImGui::SliderFloat("rcs X", &Settings::aimbot::rcsX, 0.f, 2.f);
+							ImGui::Spacing();
+							ImGui::SliderFloat("rcs Y", &Settings::aimbot::rcsY, 0.f, 2.f);
+							ImGui::Spacing();
+							ImGui::SliderInt("delay", &Settings::aimbot::startbullet, 1, 5);
 						}
 						ImGui::Spacing();
 						ImGui::Checkbox("fov circle", &Settings::aimbot::fov_circle);
@@ -618,20 +625,23 @@ void drawmenu() {
 								// Turn off the glow by writing the appropriate value
 							}
 						}
-						if (ImGui::Checkbox("no hands", &Settings::Visuals::nohands)) {
+						
+						if (ImGui::Checkbox("no smoke", &Settings::Visuals::noSmoke)) {
 
-							if (Settings::Visuals::nohands) 
-							{
-								noHandsEnabled = true;
+							if (Settings::Visuals::noSmoke) {
+								noSmokeEnabled = true;
+								// Turn on the glow by writing the appropriate value
 							}
 							else {
-								noHandsEnabled = false;
+								noSmokeEnabled = false;
+								// Turn off the glow by writing the appropriate value
 							}
 						}
 
 						ImGui::Checkbox("chams", &Settings::Visuals::chams);
 						ImGui::Checkbox("no ragdolls", &Settings::Visuals::ragdoll);
 						ImGui::Checkbox("night mode", &Settings::Visuals::nightmode);
+						ImGui::Checkbox("no hands", &Settings::Visuals::nohands);
 
 						ImGui::EndChild();
 					}
@@ -656,6 +666,23 @@ void drawmenu() {
 							isFOV = false;
 
 						}
+
+						if (ImGui::Checkbox("view model changer", &Settings::misc::viewmodleChanger));
+
+
+						if (Settings::misc::viewmodleChanger)
+						{
+							ImGui::SliderFloat("x", &Settings::misc::x, 1, 200);
+							ImGui::SliderFloat("y", &Settings::misc::y, 1, 200);
+							ImGui::SliderFloat("z", &Settings::misc::z, 1, 200);
+
+							noHandsEnabled = true;
+						}
+						else {
+							noHandsEnabled = false;
+						}
+
+
 						ImGui::EndChild();
 					}
 
@@ -666,6 +693,8 @@ void drawmenu() {
 
 						ImGui::Checkbox("save fps", &Settings::misc::save_fps);
 						ImGui::Checkbox("water mark", &Settings::misc::water);
+						ImGui::Checkbox("hit sound", &Settings::misc::hitsound);
+						ImGui::Checkbox("show spectators", &Settings::misc::spectators);
 
 
 						ImGui::EndChild();
