@@ -57,7 +57,17 @@ namespace colors
 	float scientistcol[3] = { 1.0f , 1.0f , 1.0f };
 	float itemscol[3] = { 1.0f , 1.0f , 1.0f };
 }
+float Calc2D_Distt(const Vec2& Src, const Vector3& Dst)
+{
+	float dx = Src.x - Dst.x;
+	float dy = Src.y - Dst.y;
+	return sqrt(dx * dx + dy * dy);
+}
 
+float AimFov(Vector3 ScreenPos)
+{
+	return Calc2D_Distt(Vec2(ScreenCenterX, ScreenCenterY), ScreenPos);
+}
 struct C_UTL_VECTOR
 {
 	DWORD64 Count = 0;
@@ -166,9 +176,13 @@ void espLoop()
 	ImColor Red = { 250, 92, 255, 255 };
 	auto ESPColor = ImColor(255, 255, 255);
 	Vector3 headHitBox;
+	Vector3 aimhead;
+	float closestDistance = FLT_MAX;
+	uintptr_t closestPawn = NULL;
 	if (global_pawn) 
 	{
 		view_matrix_t view_matrix = driver.readv<view_matrix_t>(client + offsets::dwViewMatrix);
+	
 
 		if (Settings::misc::hitsound) {
 			uintptr_t pBulletServices = driver.readv<uintptr_t>(global_pawn + 0x1698);
@@ -248,8 +262,13 @@ void espLoop()
 			uint64_t gamescene = driver.readv<uint64_t>(CachePlayers.Actor + 0x310);
 			uint64_t bonearray = driver.readv<uint64_t>(gamescene + 0x160 + 0x80);
 			
-			headHitBox = driver.readv<Vector3>(bonearray + 6 * 32);
 
+			//headHitBox = driver.readv<Vector3>(bonearray + 6 * 32);
+
+			Vector3 heady2 = driver.readv<Vector3>(bonearray + 6 * 32);
+			aimhead = heady2;
+			if (!w2s(heady2, headHitBox, view_matrix))
+				continue;
 
 			if (screenpos.z >= 0.01f)
 			{
@@ -429,18 +448,28 @@ void espLoop()
 					driver.write(CachePlayers.Actor + 0xA73, kEnemyColor);
 				}
 
+				
+				static ULONG w = GetSystemMetrics(SM_CXSCREEN);
+				static ULONG h = GetSystemMetrics(SM_CYSCREEN);
+				auto dx = headHitBox.x - (w / 2);
+				auto dy = headHitBox.y - (h / 2);
+				auto dist = sqrtf(dx * dx + dy * dy);
+
+				if (dist < Settings::aimbot::aim_fov && dist < closestDistance)
+				{
+
+					if (Settings::aimbot::aimbot && GetAsyncKeyState(hotkeys::aimkey) < 0)
+					{
+
+						AimBot(aimhead);
+
+					}
+
+				}
+
 			}
-			
-
 		}
-		if (Settings::aimbot::aimbot && GetAsyncKeyState(hotkeys::aimkey) < 0)
-		{
-			AimBot(headHitBox);
-
-		}
-
 	}
-	
 }
 
 
