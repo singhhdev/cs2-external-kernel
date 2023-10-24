@@ -83,39 +83,9 @@ namespace UE4Structs
 
 		float matrix[4][4];
 	};
-	struct Vector2 {
-	public:
-		float x;
-		float y;
 
-		inline Vector2() : x(0), y(0) {}
-		inline Vector2(float x, float y) : x(x), y(y) {}
-
-		inline float Distance(Vector2 v) {
-			return sqrtf(((v.x - x) * (v.x - x) + (v.y - y) * (v.y - y)));
-		}
-
-		inline Vector2 operator+(const Vector2& v) const {
-			return Vector2(x + v.x, y + v.y);
-		}
-
-		inline Vector2 operator-(const Vector2& v) const {
-			return Vector2(x - v.x, y - v.y);
-		}
-		void Normalize()
-		{
-			if (x > 89.0f)
-				x -= 180.f;
-
-			if (x < -89.0f)
-				x += 180.f;
-
-			if (y > 180.f)
-				y -= 360.f;
-
-			if (y < -180.f)
-				y += 360.f;
-		}
+	struct CCSPlayer_BulletServices {
+		int32_t m_totalHitsOnServer; // 0x40
 	};
 	struct Vector3
 	{

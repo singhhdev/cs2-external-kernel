@@ -11,6 +11,7 @@ uintptr_t global_pawn = 0;
 bool isGlow = false;
 bool isFOV = 0;
 bool noFlashEnabled = false;
+bool noSmokeEnabled = false;
 bool noHandsEnabled = false;
 float originalFOV = 68.0f; 
 
@@ -47,6 +48,9 @@ namespace Settings
         inline float aim_fov = 0.0f;
         inline float smooth = 0.0f;
         inline float trigger_delay = 0.0f;
+        float rcsX = 0.0f;
+        float rcsY = 0.0f;
+        int startbullet = 0;
         bool fov_circle = false;
         bool crosshair = false;
         bool triggerbot = false;
@@ -73,10 +77,12 @@ namespace Settings
          bool armor = false;
          bool names = false;
          bool noflash = false;
-         bool nohands = false;
          bool chams = false;
          bool ragdoll = false;
          bool nightmode = false;
+         bool nohands = false;
+         bool noSmoke = false;
+    
 
          bool box = false;
          inline  int healthtype = 0;
@@ -98,6 +104,15 @@ namespace Settings
         bool save_fps = false;
         bool water = false;
         bool fovChanger = false;
+        bool spectators = false;
+        bool hitsound = false;
+        bool viewmodleChanger = false;
+
+        inline float x = 0.0f;
+        inline float y = 0.0f;
+        inline float z = 0.0f;
+
+
         inline float fov = 0.0f;
 
     }

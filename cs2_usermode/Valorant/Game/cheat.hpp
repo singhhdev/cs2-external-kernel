@@ -1,9 +1,8 @@
 #pragma once
 #include <iostream>
-#include "../../Valorant/Overlay/render.hpp"
-
+#include "C:\Users\ka\Desktop\cheat source\cs2_usermode\Valorant\Overlay\render.hpp"
 using namespace ColorStructs;
-
+static int previousTotalHits = 0; // Initialize the previous totalHits to 0
 class Cham
 {
 public:
@@ -59,7 +58,7 @@ namespace colors
 	float itemscol[3] = { 1.0f , 1.0f , 1.0f };
 }
 
-float Calc2D_Distt(const Vector2& Src, const Vector3& Dst)
+float Calc2D_Distt(const Vec2& Src, const Vector3& Dst)
 {
 	float dx = Src.x - Dst.x;
 	float dy = Src.y - Dst.y;
@@ -68,7 +67,60 @@ float Calc2D_Distt(const Vector2& Src, const Vector3& Dst)
 
 float AimFov(Vector3 ScreenPos)
 {
-	return Calc2D_Distt(Vector2(ScreenCenterX, ScreenCenterY), ScreenPos);
+	return Calc2D_Distt(Vec2(ScreenCenterX, ScreenCenterY), ScreenPos);
+}
+
+struct C_UTL_VECTOR
+{
+	DWORD64 Count = 0;
+	DWORD64 Data = 0;
+};
+void AimBot(Vector3 AimPos)
+{
+	Vec2 RCSScale = { Settings::aimbot::rcsX, Settings::aimbot::rcsY };
+	 int RCSBullet = Settings::aimbot::startbullet;
+	
+	Vector3 LocalPos = driver.readv<Vector3>(global_pawn + 0x1274);
+	Vec2 ViewAngle = driver.readv<Vec2>(global_pawn + 0x14F8);
+
+	int ShotsFired = driver.readv<int>(global_pawn + 0x1400);
+
+	C_UTL_VECTOR AimPunchCache = driver.readv<C_UTL_VECTOR>(global_pawn + 0x1720);
+
+	float Yaw, Pitch;
+	float Distance, Norm;
+	Vector3 OppPos;
+
+	OppPos = AimPos - LocalPos;
+
+	Distance = sqrt(pow(OppPos.x, 2) + pow(OppPos.y, 2));
+
+	Yaw = atan2f(OppPos.y, OppPos.x) * 57.295779513 - ViewAngle.y;
+	Pitch = -atan(OppPos.z / Distance) * 57.295779513 - ViewAngle.x;
+	Norm = sqrt(pow(Yaw, 2) + pow(Pitch, 2));
+
+	if (Norm > Settings::aimbot::aim_fov)
+		return;
+
+	Yaw = Yaw * Settings::aimbot::smooth + ViewAngle.y;
+	Pitch = Pitch * Settings::aimbot::smooth + ViewAngle.x;
+
+
+	// Recoil control
+	if (ShotsFired > RCSBullet)
+	{
+		Vec2 PunchAngle;
+		if (AimPunchCache.Count <= 0 && AimPunchCache.Count > 0xFFFF)
+			return;
+		PunchAngle = driver.readv<Vec2>(AimPunchCache.Data + (AimPunchCache.Count - 1) * sizeof(Vector3));
+
+		Yaw = Yaw - PunchAngle.y * RCSScale.x;
+		Pitch = Pitch - PunchAngle.x * RCSScale.y;
+	}
+
+
+	Vec2 Angle{ Pitch,Yaw };
+	driver.write<Vec2>(client + 0x18E5740, Angle);
 }
 
 auto cacheGame() -> void
@@ -84,7 +136,7 @@ auto cacheGame() -> void
 
 		int localTeam = driver.readv<int>(dwLocalPlayerPawn + offsets::m_iTeamNum);
 		view_matrix_t view_matrix = driver.readv<view_matrix_t>(client + offsets::dwViewMatrix);
-		Vector3 localOrigin = driver.readv<Vector3>(dwLocalPlayerPawn + offsets::m_vecOrigin);
+		//Vector3 localOrigin = driver.readv<Vector3>(dwLocalPlayerPawn + offsets::m_vecOrigin);
 		uintptr_t entity_list = driver.readv<uintptr_t>(client + offsets::dwEntityList);
 
 		for (int i = 1; i < 32; i++)
@@ -125,10 +177,25 @@ void espLoop()
 {
 	ImColor Red = { 250, 92, 255, 255 };
 	auto ESPColor = ImColor(255, 255, 255);
-
-	if (global_pawn) {
+	Vector3 headHitBox;
+	if (global_pawn) 
+	{
 		view_matrix_t view_matrix = driver.readv<view_matrix_t>(client + offsets::dwViewMatrix);
 
+		if (Settings::misc::hitsound) {
+			uintptr_t pBulletServices = driver.readv<uintptr_t>(global_pawn + 0x1698);
+			int totalHits = driver.readv<int>(pBulletServices + 0x40);
+
+			if (totalHits != previousTotalHits) {
+				if (totalHits == 0 && previousTotalHits != 0) {
+				}
+				else {
+					PlaySoundW(L"C:\\Users\\ka\\Desktop\\cheat source\\cs2_usermode\\Valorant\\sounds\\hitsound1.wav", NULL, SND_FILENAME | SND_ASYNC); // change the path to your hitsound, or the one that i have provided here
+				}
+
+				previousTotalHits = totalHits; // Update the previousTotalHits
+			}
+		}
 		if (Settings::misc::bhop)
 		{
 			const auto on_ground = (driver.readv<uint8_t>(global_pawn + 0x3C8) & 1) != 0;
@@ -143,7 +210,18 @@ void espLoop()
 			}
 		}
 		if (Settings::Visuals::nohands) {
-			driver.write<int>(global_pawn + 0x40, 0); // no hands
+			//0x1788
+		//	uintptr_t smoke = driver.readv
+
+		}
+		if (Settings::misc::viewmodleChanger)
+		{
+			uintptr_t viewModel = driver.readv<uintptr_t>(global_pawn + 0x1258);
+			uintptr_t arms = driver.readv<uintptr_t>(viewModel + 0x40);
+			static constexpr Cham kEnemyColor{ 250, 92, 255, 255 }; // rgba, need to add brigtness. this only colors the model purple working cts.
+			driver.write(arms + 0xA73, kEnemyColor);
+
+			//driver.write<Vector3>(viewModel + 0x40, { Settings::misc::x, Settings::misc::y, Settings::misc::z });
 		}
 		if (Settings::misc::water)
 		{
@@ -162,13 +240,14 @@ void espLoop()
 		if (noFlashEnabled) {
 			driver.write<float>(global_pawn + 0x1450, 0.f); // on remember to make this default flash alpha
 		}
-
+		
 		// player info reading :
 		for (CS2Entity CachePlayers : PlayerList)
 		{
 			Vector3 origin = driver.readv<Vector3>(CachePlayers.Actor + offsets::m_vecOrigin);
 
 			Vector3 head;
+		
 			head.x = origin.x;
 			head.y = origin.y;
 			head.z = origin.z + 75.f;
@@ -180,80 +259,24 @@ void espLoop()
 			Vector3 screenhead = head.world_to_screen(view_matrix);
 			uint64_t gamescene = driver.readv<uint64_t>(CachePlayers.Actor + 0x310);
 			uint64_t bonearray = driver.readv<uint64_t>(gamescene + 0x160 + 0x80);
-
-			uintptr_t pCameraServicesPtr = driver.readv<uintptr_t>(global_pawn + 0x10E0);
-
-			Vector3 playerpos = driver.readv<Vector3>(CachePlayers.Actor + offsets::m_vecOrigin);
-			Vector3 pos;
-
-			Vector3 head_pos = Vector3(playerpos.x, playerpos.y, playerpos.z + 63);
-			Vector3 heady;
-
-			Vector3 aim_pos = Vector3(playerpos.x, playerpos.y, playerpos.z + 45);
-			Vector3 aim;
-
-			Vector3 headHitBox;
+			
 			Vector3 heady2 = driver.readv<Vector3>(bonearray + 6 * 32);
 
-			if (!w2s(heady2, headHitBox, view_matrix))
-				continue;
 
-			if (!w2s(playerpos, pos, view_matrix))
-				continue;
-
-			if (!w2s(head_pos, heady, view_matrix))
-				continue;
-
-			if (!w2s(aim_pos, aim, view_matrix))
-				continue;
+			headHitBox = heady2;
 
 			if (screenpos.z >= 0.01f)
 			{
 				Vector3 head = driver.readv<Vector3>(bonearray + 6 * 32);
 				Vector3 projectHead = head.world_to_screen(view_matrix);
-
 				float height = abs(screenpos.y - screenhead.y);
 				float width = height / 2.0f;
-
+				
 				if (Settings::Visuals::bBox)
-				{
-					if (Settings::Visuals::boxMode == 0) {
-						!Settings::Visuals::bBox;   //off
-					}
-
-					RGBA ESPColor = { colors::espcol[0] * 255, colors::espcol[1] * 255, colors::espcol[2] * 255, 255 };
-					if (Settings::Visuals::boxMode == 1)   //2d box
-					{
-						DrawNormalBox(screenpos.x - width / 2 + 1, screenhead.y, width, height, 1, &Col.black);
-						DrawNormalBox(screenpos.x - width / 2 - 1, screenhead.y, width, height, 1, &Col.black);
-						DrawNormalBox(screenpos.x - width / 2, screenhead.y + 1, width, height, 1, &Col.black);
-						DrawNormalBox(screenpos.x - width / 2, screenhead.y - 1, width, height, 1, &Col.black);
-						DrawNormalBox(screenpos.x - (width / 2), screenhead.y, width, height, 1, &ESPColor);
-
-					}
-					if (Settings::Visuals::boxMode == 2) {
-						DrawCornerBox(screenpos.x - width / 2 + 1, screenhead.y, width, height, 1, &Col.black);
-						DrawCornerBox(screenpos.x - width / 2 - 1, screenhead.y, width, height, 1, &Col.black);
-						DrawCornerBox(screenpos.x - width / 2, screenhead.y + 1, width, height, 1, &Col.black);
-						DrawCornerBox(screenpos.x - width / 2, screenhead.y - 1, width, height, 1, &Col.black);
-						DrawCornerBox(screenpos.x - (width / 2), screenhead.y, width, height, 1, &ESPColor);
-					}
-					if (Settings::Visuals::boxMode == 3)
-
-					{
-
-						DrawFilledRect(screenpos.x - (width / 2), screenhead.y, width, height, &Col.filled);
-						DrawNormalBox(screenpos.x - width / 2 + 1, screenhead.y, width, height, 1, &Col.black);
-						DrawNormalBox(screenpos.x - width / 2 - 1, screenhead.y, width, height, 1, &Col.black);
-						DrawNormalBox(screenpos.x - width / 2, screenhead.y + 1, width, height, 1, &Col.black);
-						DrawNormalBox(screenpos.x - width / 2, screenhead.y - 1, width, height, 1, &Col.black);
-						DrawNormalBox(screenpos.x - (width / 2), screenhead.y, width, height, 1, &ESPColor);
-
-					}
-				}
-
-				if (Settings::Visuals::bSnaplines)
+				if (Settings::Visuals::bSnaplines) {
 					ImGui::GetBackgroundDrawList()->AddLine({ screenpos.x, screenpos.y }, ImVec2(Width / 2, Height), ImColor(255, 255, 255));
+
+				}
 				if (Settings::Visuals::headcircle)
 				{
 
@@ -352,18 +375,18 @@ void espLoop()
 					if (!w2s(feetL, AfeetL, view_matrix))
 						continue;
 
-					ImGui::GetBackgroundDrawList()->AddLine({ Acou.x, Acou.y }, { Ahead.x, Ahead.y }, ImColor(255, 255, 255));
-					ImGui::GetBackgroundDrawList()->AddLine({ Acou.x, Acou.y }, { AshoulderR.x, AshoulderR.y }, ImColor(255, 255, 255));
-					ImGui::GetBackgroundDrawList()->AddLine({ Acou.x, Acou.y }, { AshoulderL.x, AshoulderL.y }, ImColor(255, 255, 255));
-					ImGui::GetBackgroundDrawList()->AddLine({ AbrasL.x, AbrasL.y }, { AshoulderL.x, AshoulderL.y }, ImColor(255, 255, 255));
-					ImGui::GetBackgroundDrawList()->AddLine({ AbrasR.x, AbrasR.y }, { AshoulderR.x, AshoulderR.y }, ImColor(255, 255, 255));
-					ImGui::GetBackgroundDrawList()->AddLine({ AbrasR.x, AbrasR.y }, { AhandR.x, AhandR.y }, ImColor(255, 255, 255));
-					ImGui::GetBackgroundDrawList()->AddLine({ AbrasL.x, AbrasL.y }, { AhandL.x, AhandL.y }, ImColor(255, 255, 255));
-					ImGui::GetBackgroundDrawList()->AddLine({ Acou.x, Acou.y }, { Acock.x, Acock.y }, ImColor(255, 255, 255));
-					ImGui::GetBackgroundDrawList()->AddLine({ AkneesR.x, AkneesR.y }, { Acock.x, Acock.y }, ImColor(255, 255, 255));
-					ImGui::GetBackgroundDrawList()->AddLine({ AkneesL.x, AkneesL.y }, { Acock.x, Acock.y }, ImColor(255, 255, 255));
-					ImGui::GetBackgroundDrawList()->AddLine({ AkneesL.x, AkneesL.y }, { AfeetL.x, AfeetL.y }, ImColor(255, 255, 255));
-					ImGui::GetBackgroundDrawList()->AddLine({ AkneesR.x, AkneesR.y }, { AfeetR.x, AfeetR.y }, ImColor(255, 255, 255));
+					ImGui::GetBackgroundDrawList()->AddLine({ Acou.x, Acou.y }, { Ahead.x, Ahead.y }, Red);
+					ImGui::GetBackgroundDrawList()->AddLine({ Acou.x, Acou.y }, { AshoulderR.x, AshoulderR.y }, Red);
+					ImGui::GetBackgroundDrawList()->AddLine({ Acou.x, Acou.y }, { AshoulderL.x, AshoulderL.y }, Red);
+					ImGui::GetBackgroundDrawList()->AddLine({ AbrasL.x, AbrasL.y }, { AshoulderL.x, AshoulderL.y }, Red);
+					ImGui::GetBackgroundDrawList()->AddLine({ AbrasR.x, AbrasR.y }, { AshoulderR.x, AshoulderR.y }, Red);
+					ImGui::GetBackgroundDrawList()->AddLine({ AbrasR.x, AbrasR.y }, { AhandR.x, AhandR.y }, Red);
+					ImGui::GetBackgroundDrawList()->AddLine({ AbrasL.x, AbrasL.y }, { AhandL.x, AhandL.y }, Red);
+					ImGui::GetBackgroundDrawList()->AddLine({ Acou.x, Acou.y }, { Acock.x, Acock.y }, Red);
+					ImGui::GetBackgroundDrawList()->AddLine({ AkneesR.x, AkneesR.y }, { Acock.x, Acock.y }, Red);
+					ImGui::GetBackgroundDrawList()->AddLine({ AkneesL.x, AkneesL.y }, { Acock.x, Acock.y }, Red);
+					ImGui::GetBackgroundDrawList()->AddLine({ AkneesL.x, AkneesL.y }, { AfeetL.x, AfeetL.y }, Red);
+					ImGui::GetBackgroundDrawList()->AddLine({ AkneesR.x, AkneesR.y }, { AfeetR.x, AfeetR.y }, Red);
 				}
 
 				if (isGlow)
@@ -373,6 +396,7 @@ void espLoop()
 
 				if (isFOV)
 				{
+					uintptr_t pCameraServicesPtr = driver.readv<uintptr_t>(global_pawn + 0x10E0);
 					driver.write<uint32_t>(pCameraServicesPtr + 0x210, Settings::misc::fov); // need to add checks for scopes or not.
 				}
 
@@ -383,22 +407,26 @@ void espLoop()
 					driver.write(CachePlayers.Actor + 0xA73, kEnemyColor);
 				}
 
+			}
+			
 
-				if (Settings::aimbot::aimbot) {
-					if (GetAsyncKeyState(hotkeys::aimkey) && (AimFov(aim) < Settings::aimbot::aim_fov)) {
-						if (Settings::aimbot::selectedhitbox == 0) {
-							mouse_event(MOUSEEVENTF_MOVE, (headHitBox.x - (ScreenCenterX)) / Settings::aimbot::smooth, (headHitBox.y - (ScreenCenterY)) / Settings::aimbot::smooth, 0, 0);
-						}
-
-						if (Settings::aimbot::selectedhitbox == 1) {
-							mouse_event(MOUSEEVENTF_MOVE, (aim.x - (ScreenCenterX)) / Settings::aimbot::smooth, (aim.y - (ScreenCenterY)) / Settings::aimbot::smooth, 0, 0);
-
-						}
-					}
+		}
+		if (Settings::aimbot::aimbot && GetAsyncKeyState(hotkeys::aimkey) < 0)
+		{
+			/*if (GetAsyncKeyState(hotkeys::aimkey) && (AimFov(aim) < Settings::aimbot::aim_fov)) {
+				if (Settings::aimbot::selectedhitbox == 0) {
+					mouse_event(MOUSEEVENTF_MOVE, (headHitBox.x - (ScreenCenterX)) / Settings::aimbot::smooth, (headHitBox.y - (ScreenCenterY)) / Settings::aimbot::smooth, 0, 0);
 				}
 
-			}
+				if (Settings::aimbot::selectedhitbox == 1) {
+					mouse_event(MOUSEEVENTF_MOVE, (aim.x - (ScreenCenterX)) / Settings::aimbot::smooth, (aim.y - (ScreenCenterY)) / Settings::aimbot::smooth, 0, 0);
+
+				}
+			}*/
+			AimBot(headHitBox);
+
 		}
+
 	}
 	
 }
